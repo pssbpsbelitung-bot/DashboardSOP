@@ -201,33 +201,41 @@ fetch("https://docs.google.com/spreadsheets/d/1Q145QmnMj88m0HVS5VClScWW0Qt0qugi/
   const sop2025 = rows.slice(1).map(r => Number(r[2]));
 
   new Chart(document.getElementById('lineChart2024'),{
-    type:'line',
-    data:{
-      labels:labels,
-      datasets:[{
-        label:'SOP 2024',
-        data:sop2024,
-        borderColor:'#f5b041',
-        tension:.4
-      }]
-    }
-  });
+  type:'doughnut',
+  data:{
+    labels:labels,
+    datasets:[{
+      label:'SOP 2024',
+      data:sop2024,
+      backgroundColor:[
+        '#f5b041','#f8c471','#fad7a0',
+        '#f9e79f','#d4efdf','#aed6f1',
+        '#a9cce3','#d2b4de','#f5b7b1',
+        '#f1948a','#f7dc6f','#7dcea0'
+      ]
+    }]
+  }
+});
 
   new Chart(document.getElementById('lineChart2025'),{
-    type:'line',
-    data:{
-      labels:labels,
-      datasets:[{
-        label:'SOP 2025',
-        data:sop2025,
-        borderColor:'#48c9b0',
-        tension:.4
-      }]
-    }
-  });
-
+  type:'doughnut',
+  data:{
+    labels:labels,
+    datasets:[{
+      label:'SOP 2025',
+      data:sop2025,
+      backgroundColor:[
+        '#f5b041','#f8c471','#fad7a0',
+        '#f9e79f','#d4efdf','#aed6f1',
+        '#a9cce3','#d2b4de','#f5b7b1',
+        '#f1948a','#f7dc6f','#7dcea0'
+      ]
+    }]
+  }
+});
 });
 </script>
 
 </body>
 </html>
+
