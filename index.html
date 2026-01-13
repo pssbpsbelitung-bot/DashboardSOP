@@ -234,6 +234,24 @@ fetch("https://docs.google.com/spreadsheets/d/1Q145QmnMj88m0HVS5VClScWW0Qt0qugi/
   }
 });
 });
+
+new Chart(document.getElementById('lineChart2025'),{
+  type:'doughnut',
+  data:{
+    labels:labels,
+    datasets:[{
+      label:'Reviu SOP Terakhir',
+      data:Reviu SOP Terakhir,
+      backgroundColor:[
+        '#f5b041','#f8c471','#fad7a0',
+        '#f9e79f','#d4efdf','#aed6f1',
+        '#a9cce3','#d2b4de','#f5b7b1',
+        '#f1948a','#f7dc6f','#7dcea0'
+      ]
+    }]
+  }
+});
+});
 </script>
 
 </body>
