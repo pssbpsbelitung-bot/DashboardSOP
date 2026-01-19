@@ -305,7 +305,7 @@ const shadow={id:'s',beforeDraw:c=>{
   x.shadowOffsetY=4;
 },afterDraw:c=>c.ctx.restore()};
 
-fetch("https://docs.google.com/spreadsheets/d/1Q145QmnMj88m0HVS5VClScWW0Qt0qugi/export?format=csv&gid=1210948375")
+fetch("https://docs.google.com/spreadsheets/d/1_nR6wRHOXv_9StDwur2fDVcd23jiFaENtMV9UieWzjk/edit?usp=sharing")
 .then(r=>r.text()).then(csv=>{
   const r=csv.trim().split("\n").slice(1).map(x=>x.split(","));
   const cleanLabel = v =>
@@ -356,3 +356,4 @@ const d25 = r.map(x => toNumber(x[2]));
 
 </body>
 </html>
+
