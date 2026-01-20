@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>SOP Generator BPS</title>
+
+<style>
+body{
+  font-family:Arial, sans-serif;
+  background:#f3f4f6;
+  margin:0;
+  padding:24px;
+}
+.container{
+  display:grid;
+  grid-template-columns:420px 1fr;
+  gap:24px;
+}
+.card{
+  background:#fff;
+  padding:20px;
+  border-radius:12px;
+  box-shadow:0 6px 18px rgba(0,0,0,.08);
+}
+input, textarea{
+  width:100%;
+  padding:8px;
+  margin-bottom:8px;
+  border-radius:6px;
+  border:1px solid #ccc;
+  font-size:14px;
+}
+button{
+  padding:8px 12px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+}
+.btn{background:#1E3A8A;color:#fff}
+.btn-add{background:#059669;color:#fff;font-size:13px}
+
+.page{
+  background:#fff;
+  padding:28px;
+  border-radius:12px;
+}
+
+/* ===== TABLE ===== */
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:13px;
+}
+th,td{
+  border:1px solid #000;
+  padding:6px;
+  vertical-align:top;
+}
+th{
+  background:#e5e7eb;
+  text-align:center;
+}
+.center{text-align:center}
+.no-print{display:table-cell}
+
+/* ===== KUNCI TABEL 1 & 2 ===== */
+.tabel-dua-kolom{
+  table-layout:fixed;
+}
+.tabel-dua-kolom col{
+  width:50%;
+}
+
+/* ===== TTD ===== */
+.ttd{
+  text-align:center;
+  line-height:1.6;
+  padding:16px;
+}
+.ttd .nama{
+  margin-top:36px;
+  font-weight:bold;
+  text-decoration:underline;
+}
+
+/* ===== PRINT ===== */
+@page{
+  size: landscape;
+  margin:20mm;
+}
+@media print{
+  body{background:#fff;padding:0}
+  .container{grid-template-columns:1fr}
+  .card,.no-print{display:none !important}
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<!-- ================= FORM ================= -->
+<div class="card">
+<h3>DATA SOP</h3>
+
+<input id="nomor" placeholder="Nomor SOP">
+<input id="buat" placeholder="Tanggal Pembuatan">
+<input id="revisi" placeholder="Tanggal Revisi">
+<input id="efektif" placeholder="Tanggal Efektif">
+<input id="namaSOP" placeholder="Nama SOP">
+
+<textarea id="kualifikasi" placeholder="Kualifikasi Pelaksana"></textarea>
+<textarea id="keterkaitan" placeholder="Keterkaitan"></textarea>
+<textarea id="peralatan" placeholder="Peralatan / Perlengkapan"></textarea>
+<textarea id="peringatan" placeholder="Peringatan"></textarea>
+<textarea id="pencatatan" placeholder="Pencatatan & Pendataan"></textarea>
+
+<hr>
+
+<h4>Pelaksana</h4>
+<input id="pelaksanaBaru" placeholder="Tambah pelaksana">
+<button class="btn-add" onclick="tambahPelaksana()">+ Tambah</button>
+
+<div id="formPelInput" style="margin-top:8px"></div>
+
+<hr>
+
+<h4>Tata Laksana</h4>
+<table>
+<tr>
+  <th>Kegiatan</th>
+  <th>Pelaksana</th>
+  <th>Kelengkapan</th>
+  <th>Waktu</th>
+  <th>Output</th>
+</tr>
+<tr>
+  <td><textarea id="kegiatan"></textarea></td>
+  <td></td>
+  <td><input id="kelengkapan"></td>
+  <td><input id="waktu"></td>
+  <td><input id="output"></td>
+</tr>
+</table>
+
+<button class="btn-add" onclick="tambahKegiatan()">+ Tambah Kegiatan</button>
+
+<hr>
+<button class="btn" onclick="render()">Update Preview</button>
+<button onclick="window.print()">Cetak</button>
+<button onclick="exportWord()">Export Word</button>
+</div>
+
+<!-- ================= PREVIEW ================= -->
+<div class="page" id="preview">
+
+<table>
+<tr>
+  <td rowspan="8" class="center"><b>BPS<br>KABUPATEN BELITUNG</b></td>
+  <td>NOMOR SOP</td><td>: <span id="pNomor"></span></td>
+</tr>
+<tr><td>TGL. PEMBUATAN</td><td>: <span id="pBuat"></span></td></tr>
+<tr><td>TGL. REVISI</td><td>: <span id="pRevisi"></span></td></tr>
+<tr><td>TGL. EFEKTIF</td><td>: <span id="pEfektif"></span></td></tr>
+<tr><th colspan="2">DISAHKAN OLEH</th></tr>
+<tr>
+  <td colspan="2" class="ttd">
+    Kepala Badan Pusat Statistik<br>
+    Kabupaten Belitung
+    <div class="nama">Baiq Kurniawati, SST, M.Ak</div>
+    NIP. 197805052000122001
+  </td>
+</tr>
+<tr><td>NAMA SOP</td><td>: <span id="pNamaSOP"></span></td></tr>
+</table>
+
+<br>
+
+<table class="tabel-dua-kolom">
+<colgroup><col><col></colgroup>
+
+<tr>
+  <th>DASAR HUKUM</th>
+  <th>KUALIFIKASI PELAKSANA</th>
+</tr>
+<tr>
+  <td>
+    <ol style="margin:0;padding-left:18px">
+      <li>UU No. 16 Tahun 1997 tentang Statistik</li>
+      <li>PP No. 51 Tahun 1999 tentang Penyelenggaraan Statistik</li>
+      <li>PP No. 18 Tahun 2016 tentang Perangkat Daerah</li>
+      <li>PP No. 12 Tahun 2017 tentang Pembinaan dan Pengawasan Penyelenggaraan Pemerintahan Daerah</li>
+      <li>Perpres No. 86 Tahun 2007 tentang Badan Pusat Statistik</li>
+      <li>Perpres No. 39 Tahun 2019 tentang Satu Data Indonesia</li>
+      <li>Peraturan BPS No. 4 Tahun 2019 tentang NSPK Statistik Sektoral</li>
+      <li>Peraturan BPS No. 3 Tahun 2022 tentang Evaluasi Statistik Sektoral</li>
+      <li>Kepka BPS No. 003 Tahun 2002 jo. Perka BPS No. 16 Tahun 2017</li>
+      <li>Perka BPS No. 19 Tahun 2013 tentang SOP Administrasi</li>
+      <li>Perka BPS No. 5 Tahun 2023 tentang Organisasi dan Tata Kerja BPS</li>
+    </ol>
+  </td>
+  <td id="pKualifikasi"></td>
+</tr>
+
+<tr>
+  <th>KETERKAITAN</th>
+  <th>PERALATAN / PERLENGKAPAN</th>
+</tr>
+<tr>
+  <td id="pKeterkaitan"></td>
+  <td id="pPeralatan"></td>
+</tr>
+
+<tr>
+  <th>PERINGATAN</th>
+  <th>PENCATATAN DAN PENDATAAN</th>
+</tr>
+<tr>
+  <td id="pPeringatan"></td>
+  <td id="pPencatatan"></td>
+</tr>
+</table>
+
+<h3 style="margin-top:20px">TATA LAKSANA</h3>
+
+<table>
+<thead>
+<tr>
+  <th rowspan="2">No</th>
+  <th rowspan="2">Kegiatan</th>
+  <th id="pelHeader">Pelaksana</th>
+  <th colspan="3">Mutu Baku</th>
+  <th rowspan="2">Ket</th>
+  <th rowspan="2" class="no-print">Aksi</th>
+</tr>
+<tr id="pelSub"></tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table>
+
+</div>
+</div>
+
+<script>
+let pelaksana=[], kegiatanData=[];
+
+/* === PELAKSANA === */
+function tambahPelaksana(){
+  if(!pelaksanaBaru.value) return;
+  pelaksana.push(pelaksanaBaru.value);
+  pelaksanaBaru.value="";
+  renderPelaksana();
+}
+
+function editPelaksana(i,val){
+  pelaksana[i]=val.trim();
+  renderTable();
+}
+
+function hapusPelaksana(i){
+  if(!confirm("Hapus pelaksana ini?")) return;
+  pelaksana.splice(i,1);
+  kegiatanData.forEach(k=>{
+    let n={};
+    Object.keys(k.pelaksana).forEach(x=>{
+      if(x<i) n[x]=k.pelaksana[x];
+      else if(x>i) n[x-1]=k.pelaksana[x];
+    });
+    k.pelaksana=n;
+  });
+  renderPelaksana();
+}
+
+function renderPelaksana(){
+  formPelInput.innerHTML="";
+  pelaksana.forEach((p,i)=>{
+    formPelInput.innerHTML+=`
+      <div style="display:flex;gap:6px;margin-bottom:4px">
+        <input type="text" value="${p}"
+          onchange="editPelaksana(${i},this.value)" style="flex:1">
+        <button onclick="hapusPelaksana(${i})"
+          style="background:#dc2626;color:#fff;border:none;border-radius:4px">✕</button>
+      </div>`;
+  });
+  renderTable();
+}
+
+/* === KEGIATAN === */
+function tambahKegiatan(){
+  let pel={};
+  pelaksana.forEach((_,i)=>pel[i]=false);
+  kegiatanData.push({
+    kegiatan:kegiatan.value,
+    pelaksana:pel,
+    kelengkapan:kelengkapan.value,
+    waktu:waktu.value,
+    output:output.value
+  });
+  kegiatan.value=kelengkapan.value=waktu.value=output.value="";
+  renderTable();
+}
+
+function render(){
+  pNomor.textContent=nomor.value;
+  pBuat.textContent=buat.value;
+  pRevisi.textContent=revisi.value;
+  pEfektif.textContent=efektif.value;
+  pNamaSOP.textContent=namaSOP.value;
+
+  pKualifikasi.innerHTML=kualifikasi.value.replace(/\n/g,"<br>");
+  pKeterkaitan.innerHTML=keterkaitan.value.replace(/\n/g,"<br>");
+  pPeralatan.innerHTML=peralatan.value.replace(/\n/g,"<br>");
+  pPeringatan.innerHTML=peringatan.value.replace(/\n/g,"<br>");
+  pPencatatan.innerHTML=pencatatan.value.replace(/\n/g,"<br>");
+}
+
+function renderTable(){
+  pelHeader.colSpan=pelaksana.length||1;
+  pelSub.innerHTML=pelaksana.map(p=>`<th>${p}</th>`).join("")+
+    `<th>Kelengkapan</th><th>Waktu</th><th>Output</th>`;
+  tbody.innerHTML="";
+  kegiatanData.forEach((d,i)=>{
+    tbody.innerHTML+=`
+    <tr>
+      <td class="center">${i+1}</td>
+      <td>${d.kegiatan}</td>
+      ${pelaksana.map((_,x)=>`
+        <td class="center">
+          <input type="checkbox" ${d.pelaksana[x]?"checked":""}
+            onchange="d.pelaksana[${x}]=this.checked">
+        </td>`).join("")}
+      <td>${d.kelengkapan}</td>
+      <td class="center">${d.waktu}</td>
+      <td>${d.output}</td>
+      <td></td>
+      <td class="no-print center">
+        <button onclick="kegiatanData.splice(${i},1);renderTable()">✕</button>
+      </td>
+    </tr>`;
+  });
+}
+
+/* === EXPORT WORD === */
+function exportWord(){
+  render();
+  const html = `
+  <html xmlns:o='urn:schemas-microsoft-com:office:office'
+        xmlns:w='urn:schemas-microsoft-com:office:word'
+        xmlns='http://www.w3.org/TR/REC-html40'>
+  <head><meta charset='utf-8'></head><body>
+  ${document.getElementById("preview").innerHTML}
+  </body></html>`;
+  const blob=new Blob(['\ufeff',html],{type:'application/msword'});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="SOP.doc";
+  a.click();
+}
+</script>
+
+</body>
+</html>
