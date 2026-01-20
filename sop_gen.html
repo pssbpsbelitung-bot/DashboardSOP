@@ -22,7 +22,7 @@ body{
   border-radius:12px;
   box-shadow:0 6px 18px rgba(0,0,0,.08);
 }
-input, textarea{
+input, textarea, select{
   width:100%;
   padding:8px;
   margin-bottom:8px;
@@ -93,6 +93,15 @@ th{
   .container{grid-template-columns:1fr}
   .card,.no-print{display:none !important}
 }
+
+/* ===== FLOWCHART TEXT ===== */
+.flow-text{
+  font-size:11px;
+  display:block;
+  margin-top:4px;
+  text-align:center;
+  font-weight:bold;
+}
 </style>
 </head>
 
@@ -120,7 +129,6 @@ th{
 <h4>Pelaksana</h4>
 <input id="pelaksanaBaru" placeholder="Tambah pelaksana">
 <button class="btn-add" onclick="tambahPelaksana()">+ Tambah</button>
-
 <div id="formPelInput" style="margin-top:8px"></div>
 
 <hr>
@@ -154,6 +162,7 @@ th{
 <!-- ================= PREVIEW ================= -->
 <div class="page" id="preview">
 
+<!-- ===== TABEL 1 ===== -->
 <table>
 <tr>
   <td rowspan="8" class="center"><b>BPS<br>KABUPATEN BELITUNG</b></td>
@@ -176,6 +185,7 @@ th{
 
 <br>
 
+<!-- ===== TABEL 2 ===== -->
 <table class="tabel-dua-kolom">
 <colgroup><col><col></colgroup>
 
@@ -223,6 +233,7 @@ th{
 
 <h3 style="margin-top:20px">TATA LAKSANA</h3>
 
+<!-- ===== TABEL 3 ===== -->
 <table>
 <thead>
 <tr>
@@ -261,10 +272,10 @@ function hapusPelaksana(i){
   if(!confirm("Hapus pelaksana ini?")) return;
   pelaksana.splice(i,1);
   kegiatanData.forEach(k=>{
+    delete k.pelaksana[i];
     let n={};
     Object.keys(k.pelaksana).forEach(x=>{
-      if(x<i) n[x]=k.pelaksana[x];
-      else if(x>i) n[x-1]=k.pelaksana[x];
+      n[x< i? x : x-1] = k.pelaksana[x];
     });
     k.pelaksana=n;
   });
@@ -279,7 +290,7 @@ function renderPelaksana(){
         <input type="text" value="${p}"
           onchange="editPelaksana(${i},this.value)" style="flex:1">
         <button onclick="hapusPelaksana(${i})"
-          style="background:#dc2626;color:#fff;border:none;border-radius:4px">✕</button>
+          style="background:#dc2626;color:#fff">✕</button>
       </div>`;
   });
   renderTable();
@@ -287,8 +298,11 @@ function renderPelaksana(){
 
 /* === KEGIATAN === */
 function tambahKegiatan(){
+  if(!kegiatan.value) return;
   let pel={};
-  pelaksana.forEach((_,i)=>pel[i]=false);
+  pelaksana.forEach((_,i)=>{
+    pel[i]={cek:false, flow:""};
+  });
   kegiatanData.push({
     kegiatan:kegiatan.value,
     pelaksana:pel,
@@ -316,19 +330,26 @@ function render(){
 
 function renderTable(){
   pelHeader.colSpan=pelaksana.length||1;
-  pelSub.innerHTML=pelaksana.map(p=>`<th>${p}</th>`).join("")+
-    `<th>Kelengkapan</th><th>Waktu</th><th>Output</th>`;
+  pelSub.innerHTML=pelaksana.map(p=>`<th>${p}</th>`).join("")+`<th>Kelengkapan</th><th>Waktu</th><th>Output</th>`;
   tbody.innerHTML="";
   kegiatanData.forEach((d,i)=>{
     tbody.innerHTML+=`
     <tr>
       <td class="center">${i+1}</td>
       <td>${d.kegiatan}</td>
-      ${pelaksana.map((_,x)=>`
-        <td class="center">
-          <input type="checkbox" ${d.pelaksana[x]?"checked":""}
-            onchange="d.pelaksana[${x}]=this.checked">
-        </td>`).join("")}
+      ${pelaksana.map((_,x)=>{
+        let f=d.pelaksana[x].flow||"";
+        return `<td class="center">
+         
+          <select onchange="d.pelaksana[${x}].flow=this.value">
+            <option value="">-</option>
+            <option value="START" ${f==="START"?"selected":""}>START</option>
+            <option value="PROSES" ${f==="PROSES"?"selected":""}>PROSES</option>
+            <option value="DECISION" ${f==="DECISION"?"selected":""}>KEPUTUSAN</option>
+          </select>
+          ${f?'<span class="flow-text">'+f+'</span>':""}
+        </td>`;
+      }).join("")}
       <td>${d.kelengkapan}</td>
       <td class="center">${d.waktu}</td>
       <td>${d.output}</td>
@@ -343,8 +364,7 @@ function renderTable(){
 /* === EXPORT WORD === */
 function exportWord(){
   render();
-  const html = `
-  <html xmlns:o='urn:schemas-microsoft-com:office:office'
+  const html=`<html xmlns:o='urn:schemas-microsoft-com:office:office'
         xmlns:w='urn:schemas-microsoft-com:office:word'
         xmlns='http://www.w3.org/TR/REC-html40'>
   <head><meta charset='utf-8'></head><body>
