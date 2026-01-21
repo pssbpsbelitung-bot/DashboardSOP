@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <title>SOP Generator BPS</title>
-
 <style>
 body{
   font-family:Arial, sans-serif;
@@ -43,6 +42,7 @@ button{
   background:#fff;
   padding:28px;
   border-radius:12px;
+  position:relative;
 }
 
 /* ===== TABLE ===== */
@@ -94,13 +94,78 @@ th{
   .card,.no-print{display:none !important}
 }
 
-/* ===== FLOWCHART TEXT ===== */
+/* ===== FLOW ===== */
 .flow-text{
   font-size:11px;
   display:block;
   margin-top:4px;
   text-align:center;
   font-weight:bold;
+}
+.flow-select{
+  font-size:12px;
+}
+.flow-icon{
+  display:block;
+  font-size:24px;              /* base size */
+  font-family: "Segoe UI Symbol", "Arial Unicode MS", sans-serif;
+  margin-top:4px;
+  text-align:center;
+  line-height:1;
+  transform: scale(1.6);       /* INI KUNCI UTAMA */
+  transform-origin: center;
+}
+.flow-svg{
+  width:36px;
+  height:36px;
+  display:block;
+  margin:4px auto 0;
+}
+.flow-big{
+  display:block;
+  font-size:28px;
+  margin-top:4px;
+  text-align:center;
+}
+/* ===== CUSTOM DROPDOWN ===== */
+.custom-dropdown {
+  width: 150px;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  position: relative;
+}
+
+.custom-dropdown-selected {
+  padding: 8px;
+}
+
+.custom-dropdown-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border: 1px solid #ccc;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background-color: white;
+  display: none; /* Sembunyikan daftar opsi secara default */
+  z-index: 1; /* Pastikan dropdown berada di atas elemen lain */
+}
+
+.custom-dropdown-list li {
+  padding: 5px;
+}
+
+.custom-dropdown-list li img {
+  width: 20px; /* Atur lebar gambar */
+  height: 20px; /* Atur tinggi gambar */
+  vertical-align: middle;
+  margin-right: 5px;
+}
+
+.custom-dropdown-list li:hover {
+  background-color: #f0f0f0;
 }
 </style>
 </head>
@@ -166,18 +231,10 @@ th{
 <table>
 <tr>
   <td rowspan="8" class="center">
-<b><br></b>
-<b><br></b>
-<b><br></b>
-<b><br></b>
-<b><br></b>
-<img src="https://lh3.googleusercontent.com/d/1FmC7IA0IFPIagwnYJlj7m9VkNZEdFkMJ=s300"
-    alt="Logo BPS"
-    class="logo-bps"
-  style="width:100px; height:auto;">
-<b><br>BADAN PUSAT STATISTIK<br>KABUPATEN BELITUNG<br>
-</b></td>
-
+    <img src="https://lh3.googleusercontent.com/d/1FmC7IA0IFPIagwnYJlj7m9VkNZEdFkMJ=s300"
+    style="width:100px"><br>
+    <b>BADAN PUSAT STATISTIK<br>KABUPATEN BELITUNG</b>
+  </td>
   <td>NOMOR SOP</td><td>: <span id="pNomor"></span></td>
 </tr>
 <tr><td>TGL. PEMBUATAN</td><td>: <span id="pBuat"></span></td></tr>
@@ -186,8 +243,7 @@ th{
 <tr><th colspan="2">DISAHKAN OLEH</th></tr>
 <tr>
   <td colspan="2" class="ttd">
-    Kepala Badan Pusat Statistik<br>
-    Kabupaten Belitung
+    Kepala Badan Pusat Statistik Kabupaten Belitung
     <div class="nama">Baiq Kurniawati, SST, M.Ak</div>
     NIP. 197805052000122001
   </td>
@@ -200,7 +256,6 @@ th{
 <!-- ===== TABEL 2 ===== -->
 <table class="tabel-dua-kolom">
 <colgroup><col><col></colgroup>
-
 <tr>
   <th>DASAR HUKUM</th>
   <th>KUALIFIKASI PELAKSANA</th>
@@ -223,7 +278,6 @@ th{
   </td>
   <td id="pKualifikasi"></td>
 </tr>
-
 <tr>
   <th>KETERKAITAN</th>
   <th>PERALATAN / PERLENGKAPAN</th>
@@ -232,7 +286,6 @@ th{
   <td id="pKeterkaitan"></td>
   <td id="pPeralatan"></td>
 </tr>
-
 <tr>
   <th>PERINGATAN</th>
   <th>PENCATATAN DAN PENDATAAN</th>
@@ -243,7 +296,7 @@ th{
 </tr>
 </table>
 
-<h3 style="margin-top:20px">TATA LAKSANA</h3>
+<h3 style="margin-top:20px"></h3>
 
 <!-- ===== TABEL 3 ===== -->
 <table>
@@ -274,12 +327,10 @@ function tambahPelaksana(){
   pelaksanaBaru.value="";
   renderPelaksana();
 }
-
 function editPelaksana(i,val){
   pelaksana[i]=val.trim();
   renderTable();
 }
-
 function hapusPelaksana(i){
   if(!confirm("Hapus pelaksana ini?")) return;
   pelaksana.splice(i,1);
@@ -293,17 +344,14 @@ function hapusPelaksana(i){
   });
   renderPelaksana();
 }
-
 function renderPelaksana(){
   formPelInput.innerHTML="";
   pelaksana.forEach((p,i)=>{
     formPelInput.innerHTML+=`
-      <div style="display:flex;gap:6px;margin-bottom:4px">
-        <input type="text" value="${p}"
-          onchange="editPelaksana(${i},this.value)" style="flex:1">
-        <button onclick="hapusPelaksana(${i})"
-          style="background:#dc2626;color:#fff">✕</button>
-      </div>`;
+    <div style="display:flex;gap:6px;margin-bottom:4px">
+      <input value="${p}" onchange="editPelaksana(${i},this.value)" style="flex:1">
+      <button onclick="hapusPelaksana(${i})" style="background:#dc2626;color:#fff">✕</button>
+    </div>`;
   });
   renderTable();
 }
@@ -312,9 +360,7 @@ function renderPelaksana(){
 function tambahKegiatan(){
   if(!kegiatan.value) return;
   let pel={};
-  pelaksana.forEach((_,i)=>{
-    pel[i]={cek:false, flow:""};
-  });
+  pelaksana.forEach((_,i)=>pel[i]={flow:""});
   kegiatanData.push({
     kegiatan:kegiatan.value,
     pelaksana:pel,
@@ -340,9 +386,82 @@ function render(){
   pPencatatan.innerHTML=pencatatan.value.replace(/\n/g,"<br>");
 }
 
+// Fungsi untuk inisialisasi dropdown kustom
+function initializeCustomDropdowns() {
+  const dropdowns = document.querySelectorAll('.custom-dropdown');
+
+  dropdowns.forEach(dropdown => {
+    const selected = dropdown.querySelector('.custom-dropdown-selected');
+    const list = dropdown.querySelector('.custom-dropdown-list');
+    const hiddenInput = dropdown.querySelector('input[type="hidden"]');
+    const listItems = list.querySelectorAll('li');
+
+    // Fungsi untuk menampilkan/menyembunyikan daftar opsi
+    selected.addEventListener('click', () => {
+      list.style.display = list.style.display === 'block' ? 'none' : 'block';
+    });
+
+    // Fungsi untuk mengubah opsi yang dipilih
+    listItems.forEach(item => {
+      item.addEventListener('click', () => {
+        const value = item.dataset.value;
+        const imgHTML = item.innerHTML;
+
+        selected.innerHTML = imgHTML;
+        hiddenInput.value = value;
+        list.style.display = 'none';
+
+        // Memanggil renderTable agar tampilan tabel diperbarui
+        renderTable();
+      });
+    });
+  });
+}
+
+// Fungsi untuk inisialisasi dropdown kustom
+function initializeCustomDropdowns() {
+  const dropdowns = document.querySelectorAll('.custom-dropdown');
+
+  dropdowns.forEach(dropdown => {
+    const selected = dropdown.querySelector('.custom-dropdown-selected');
+    const list = dropdown.querySelector('.custom-dropdown-list');
+    const hiddenInput = dropdown.querySelector('input[type="hidden"]');
+    const listItems = list.querySelectorAll('li');
+
+    // Fungsi untuk menampilkan/menyembunyikan daftar opsi
+    selected.addEventListener('click', () => {
+      list.style.display = list.style.display === 'block' ? 'none' : 'block';
+    });
+
+    // Fungsi untuk mengubah opsi yang dipilih
+    listItems.forEach(item => {
+      item.addEventListener('click', () => {
+        const value = item.dataset.value;
+        const imgHTML = item.innerHTML;
+
+        selected.innerHTML = imgHTML; // Perbarui tampilan opsi yang dipilih
+        hiddenInput.value = value; // Perbarui nilai input tersembunyi
+        list.style.display = 'none'; // Sembunyikan kembali daftar opsi
+
+        // Memanggil renderTable agar tampilan tabel diperbarui
+        renderTable();
+      });
+    });
+
+    // Set initial value
+    listItems.forEach(item => {
+        if (item.dataset.value === hiddenInput.value) {
+            selected.innerHTML = item.innerHTML;
+        }
+    });
+  });
+}
+
+// Panggil fungsi inisialisasi setelah tabel dirender
 function renderTable(){
   pelHeader.colSpan=pelaksana.length||1;
-  pelSub.innerHTML=pelaksana.map(p=>`<th>${p}</th>`).join("")+`<th>Kelengkapan</th><th>Waktu</th><th>Output</th>`;
+  pelSub.innerHTML=pelaksana.map(p=>`<th>${p}</th>`).join("")
+    +`<th>Kelengkapan</th><th>Waktu</th><th>Output</th>`;
   tbody.innerHTML="";
   kegiatanData.forEach((d,i)=>{
     tbody.innerHTML+=`
@@ -351,15 +470,21 @@ function renderTable(){
       <td>${d.kegiatan}</td>
       ${pelaksana.map((_,x)=>{
         let f=d.pelaksana[x].flow||"";
+        // Ganti elemen <select> dengan dropdown kustom
         return `<td class="center">
-         
-          <select onchange="d.pelaksana[${x}].flow=this.value">
-            <option value="">-</option>
-            <option value="START" ${f==="START"?"selected":""}>START</option>
-            <option value="PROSES" ${f==="PROSES"?"selected":""}>PROSES</option>
-            <option value="DECISION" ${f==="DECISION"?"selected":""}>KEPUTUSAN</option>
-          </select>
-          ${f?'<span class="flow-text">'+f+'</span>':""}
+          <div class="custom-dropdown">
+            <div class="custom-dropdown-selected">
+              ${f ? `<img src="https://lh3.googleusercontent.com/d/${f.toLowerCase()}.png" width="20" height="20">` : "-"}
+            </div>
+            <ul class="custom-dropdown-list">
+              <li data-value=""><img src="https://lh3.googleusercontent.com/d/none.png" width="20" height="20"> -</li>
+              <li data-value="START"><img src="https://lh3.googleusercontent.com/d/1RX3WNtzKvPiwftRYJbBufUuh3hPd5ins" width="20" height="20"> Start</li>
+              <li data-value="PROSES"><img src="https://lh3.googleusercontent.com/d/1RqU3Sjk5MMAmf6Apjz4DrRxG7WhVjGBB" width="20" height="20"> Proses</li>
+              <li data-value="DECISION"><img src="https://lh3.googleusercontent.com/d/1U4x7_8Tb3HCFxUAWtWN9KIwgvT8mjKOD" width="20" height="20"> Decision</li>
+              <li data-value="END"><img src="https://lh3.googleusercontent.com/d/1RX3WNtzKvPiwftRYJbBufUuh3hPd5ins" width="20" height="20"> End</li>
+            </ul>
+            <input type="hidden" value="${f}">
+          </div>
         </td>`;
       }).join("")}
       <td>${d.kelengkapan}</td>
@@ -371,23 +496,29 @@ function renderTable(){
       </td>
     </tr>`;
   });
+
+  // Inisialisasi dropdown kustom setelah tabel dirender
+  initializeCustomDropdowns();
 }
 
 /* === EXPORT WORD === */
 function exportWord(){
   render();
   const html=`<html xmlns:o='urn:schemas-microsoft-com:office:office'
-        xmlns:w='urn:schemas-microsoft-com:office:word'
-        xmlns='http://www.w3.org/TR/REC-html40'>
-  <head><meta charset='utf-8'></head><body>
-  ${document.getElementById("preview").innerHTML}
-  </body></html>`;
+    xmlns:w='urn:schemas-microsoft-com:office:word'
+    xmlns='http://www.w3.org/TR/REC-html40'>
+    <head><meta charset='utf-8'></head><body>
+    ${document.getElementById("preview").innerHTML}
+    </body></html>`;
   const blob=new Blob(['\ufeff',html],{type:'application/msword'});
   const a=document.createElement("a");
   a.href=URL.createObjectURL(blob);
   a.download="SOP.doc";
   a.click();
 }
+
+// Panggil fungsi inisialisasi saat halaman dimuat
+window.addEventListener('load', initializeCustomDropdowns);
 </script>
 
 </body>
