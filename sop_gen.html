@@ -167,10 +167,136 @@ th{
 .custom-dropdown-list li:hover {
   background-color: #f0f0f0;
 }
-</style>
+
+/* CSS HTML KEDUA */
+
+  font-family:Arial,sans-serif;
+  background:#f3f4f6;
+  margin:0;
+  padding:24px;
+}
+.container{
+  display:grid;
+  grid-template-columns:420px 1fr;
+  gap:24px;
+}
+.card,.page{
+  background:#fff;
+  padding:20px;
+  border-radius:12px;
+  box-shadow:0 6px 18px rgba(0,0,0,.08);
+}
+button{
+  padding:8px 12px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  margin:4px 2px;
+}
+.btn{background:#1E3A8A;color:#fff}
+.btn-add{background:#059669;color:#fff;font-size:13px}
+
+/* FLOW AREA */
+#flowArea{
+  margin-top:16px;
+  height:480px;
+  border:2px dashed #94a3b8;
+  border-radius:12px;
+  position:relative;
+  background:#f8fafc;
+  overflow:hidden;
+}
+
+/* SVG HARUS NON-AKTIF */
+#svg{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+}
+
+/* NODE */
+.flow-node{
+  position:absolute;
+  width:80px;
+  height:35px;
+  cursor:move;
+  z-index:10;
+  pointer-events:auto;
+}
+.flow-node .content{
+  width:100%;
+  height:100%;
+  border:2px solid #1e3a8a;
+  border-radius:8px;
+  background:#fff;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+  font-size:11px;
+}
+
+/* START / END */
+.flow-node.start .content,
+.flow-node.end .content{
+  border-radius:999px;
+}
+.flow-node.start .content{background:#dcfce7}
+.flow-node.end .content{background:#fee2e2}
+
+/* DECISION */
+.flow-node.decision{
+  width:60px;
+  height:60px;
+}
+.flow-node.decision .content{
+  transform:rotate(45deg);
+  border-radius:0;
+  background:#fef9c3;
+  border-color:#ca8a04;
+}
+.flow-node.decision span{
+  transform:rotate(-45deg);
+  display:block;
+  font-size:11px;
+}
+
+/* DELETE NODE */
+.node-del{
+  position:absolute;
+  top:-10px;
+  right:-10px;
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  background:#dc2626;
+  color:#fff;
+  text-align:center;
+  line-height:18px;
+  font-size:12px;
+  cursor:pointer;
+}
+
+/* CONNECTOR */
+.conn-del{cursor:pointer;fill:#dc2626}
+.conn-del-text{
+  fill:#fff;
+  font-size:11px;
+  font-weight:bold;
+  text-anchor:middle;
+  dominant-baseline:middle;
+  pointer-events:none;
+}
+.handle{
+  fill:#2563eb;
+  cursor:move;
+}</style>
 </head>
 
 <body>
+
+<!-- ======================= HTML PERTAMA (UTUH) ======================= -->
+
 <div class="container">
 
 <!-- ================= FORM ================= -->
@@ -472,20 +598,7 @@ function renderTable(){
         let f=d.pelaksana[x].flow||"";
         // Ganti elemen <select> dengan dropdown kustom
         return `<td class="center">
-          <div class="custom-dropdown">
-            <div class="custom-dropdown-selected">
-              ${f ? `<img src="https://lh3.googleusercontent.com/d/${f.toLowerCase()}.png" width="20" height="20">` : "-"}
-            </div>
-            <ul class="custom-dropdown-list">
-              <li data-value=""><img src="https://lh3.googleusercontent.com/d/none.png" width="20" height="20"> -</li>
-              <li data-value="START"><img src="https://lh3.googleusercontent.com/d/1RX3WNtzKvPiwftRYJbBufUuh3hPd5ins" width="20" height="20"> Start</li>
-              <li data-value="PROSES"><img src="https://lh3.googleusercontent.com/d/1RqU3Sjk5MMAmf6Apjz4DrRxG7WhVjGBB" width="20" height="20"> Proses</li>
-              <li data-value="DECISION"><img src="https://lh3.googleusercontent.com/d/1U4x7_8Tb3HCFxUAWtWN9KIwgvT8mjKOD" width="20" height="20"> Decision</li>
-              <li data-value="END"><img src="https://lh3.googleusercontent.com/d/1RX3WNtzKvPiwftRYJbBufUuh3hPd5ins" width="20" height="20"> End</li>
-            </ul>
-            <input type="hidden" value="${f}">
-          </div>
-        </td>`;
+      </td>`;
       }).join("")}
       <td>${d.kelengkapan}</td>
       <td class="center">${d.waktu}</td>
@@ -521,5 +634,176 @@ function exportWord(){
 window.addEventListener('load', initializeCustomDropdowns);
 </script>
 
+<!-- ======================= SCRIPT HTML KEDUA (UTUH) ======================= -->
+<div class="container">
+
+<div class="card">
+  <h3>FLOW SETTING</h3>
+  <button class="btn" onclick="connectorMode='straight'">Konektor Lurus</button>
+  <button class="btn" onclick="connectorMode='elbow'">Konektor Siku</button>
+  <hr>
+  <button class="btn-add" onclick="addNode('start')">+ Start</button>
+  <button class="btn-add" onclick="addNode('process')">+ Proses</button>
+  <button class="btn-add" onclick="addNode('decision')">+ Decision</button>
+  <button class="btn-add" onclick="addNode('end')">+ End</button>
+</div>
+
+<div class="page">
+<h3>FLOWCHART SOP</h3>
+<div id="flowArea">
+  <svg id="svg" width="100%" height="100%"></svg>
+</div>
+</div>
+
+</div>
+
+<script>
+const area = document.getElementById("flowArea");
+const svg = document.getElementById("svg");
+
+let nodes={}, links=[];
+let dragNode=null, dragHandle=null, linkFrom=null;
+let connectorMode="elbow";
+
+/* NODE SIZE (SATU SUMBER KEBENARAN) */
+const NODE_W = 80;
+const NODE_H = 35;
+
+/* SVG RESIZE */
+function resizeSVG(){
+  svg.setAttribute("viewBox",`0 0 ${area.clientWidth} ${area.clientHeight}`);
+}
+resizeSVG();
+window.addEventListener("resize",resizeSVG);
+
+/* ADD NODE */
+function addNode(type){
+  const id="N"+Date.now();
+  nodes[id]={id,type,x:80,y:80,text:type.toUpperCase()};
+  draw();
+}
+
+/* DRAW */
+function draw(){
+  area.querySelectorAll(".flow-node").forEach(n=>n.remove());
+  svg.innerHTML="";
+  drawLinks();
+  drawNodes();
+}
+
+/* DRAW NODES */
+function drawNodes(){
+  Object.values(nodes).forEach(n=>{
+    const d=document.createElement("div");
+    d.className="flow-node "+n.type;
+    d.style.left=n.x+"px";
+    d.style.top=n.y+"px";
+
+    d.innerHTML=`
+      <div class="content">
+        ${n.type==="decision"?"<span>Decision</span>":n.text}
+      </div>
+      <div class="node-del">×</div>
+    `;
+
+    d.onmousedown=()=>dragNode=n.id;
+
+    d.onclick=e=>{
+      e.stopPropagation();
+      if(!linkFrom) linkFrom=n.id;
+      else{
+        links.push({
+          id:"L"+Date.now(),
+          from:linkFrom,
+          to:n.id,
+          type:connectorMode,
+          midX:(nodes[linkFrom].x+n.x)/2+NODE_W/2,
+          midY:(nodes[linkFrom].y+n.y)/2+NODE_H/2
+        });
+        linkFrom=null;
+        draw();
+      }
+    };
+
+    d.querySelector(".node-del").onclick=e=>{
+      e.stopPropagation();
+      links=links.filter(l=>l.from!==n.id&&l.to!==n.id);
+      delete nodes[n.id];
+      draw();
+    };
+
+    area.appendChild(d);
+  });
+}
+
+/* DRAW LINKS */
+function drawLinks(){
+  svg.innerHTML=`
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10"
+      refX="10" refY="5"
+      markerWidth="6" markerHeight="6"
+      orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#000"/>
+    </marker>
+  </defs>
+  `;
+
+  links.forEach(l=>{
+    const a=nodes[l.from], b=nodes[l.to];
+    if(!a||!b) return;
+
+    const ax=a.x+NODE_W/2, ay=a.y+NODE_H/2;
+    const bx=b.x+NODE_W/2, by=b.y+NODE_H/2;
+
+    let d = l.type==="straight"
+      ? `M${ax} ${ay} L${bx} ${by}`
+      : `M${ax} ${ay} L${l.midX} ${l.midY} L${bx} ${by}`;
+
+    svg.innerHTML+=`
+      <path d="${d}" stroke="#000" stroke-width="2" fill="none"
+        marker-end="url(#arrow)"/>
+    `;
+
+    svg.innerHTML+=`
+      <g class="conn-del" onclick="deleteLink('${l.id}')">
+        <circle cx="${l.midX}" cy="${l.midY}" r="8"/>
+        <text x="${l.midX}" y="${l.midY}" class="conn-del-text">×</text>
+      </g>
+    `;
+
+    if(l.type==="elbow"){
+      svg.innerHTML+=`
+        <circle class="handle" cx="${l.midX}" cy="${l.midY}" r="5"
+          onmousedown="dragHandle='${l.id}'"/>
+      `;
+    }
+  });
+}
+
+/* DRAG */
+document.onmousemove=e=>{
+  if(dragNode){
+    nodes[dragNode].x+=e.movementX;
+    nodes[dragNode].y+=e.movementY;
+    draw();
+  }
+  if(dragHandle){
+    const l=links.find(x=>x.id===dragHandle);
+    l.midX+=e.movementX;
+    l.midY+=e.movementY;
+    draw();
+  }
+};
+document.onmouseup=()=>{
+  dragNode=null;
+  dragHandle=null;
+};
+
+function deleteLink(id){
+  links=links.filter(l=>l.id!==id);
+  draw();
+}
+</script>
 </body>
 </html>
