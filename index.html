@@ -225,16 +225,14 @@ footer{
 <nav>
   <span>Monitoring dan Capaian SOP ( Ujicoba) </span>
 
-   <div style="display:flex;gap:10px">
+   <button onclick="resetPin()">
     <a href="flowchart.html" target="_blank" class="nav-link">
-      <i class="fas fa-file-alt"></i> Flowchart Generator (Ujicoba)
-    </a>
-  </div>
-  <div style="display:flex;gap:10px">
+      <i class="fas fa-file-alt"></i> Flowchart Generator 
+    </a></button>
+  <button onclick="resetPin()">
     <a href="sop_gen.html" target="_blank" class="nav-link">
-      <i class="fas fa-file-alt"></i> SOP Generator (Ujicoba)
-    </a>
-
+      <i class="fas fa-file-alt"></i> SOP Generator 
+    </a></button>
     <button onclick="resetPin()">
       <i class="fas fa-rotate-left"></i> Reset PIN
     </button>
@@ -455,6 +453,7 @@ const d25 = r.map(x => toNumber(x[2]));
 </body>
 
 </html>
+
 
 
 
