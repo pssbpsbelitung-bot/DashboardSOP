@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>SOP Flowchart Editor PRO</title>
+
+<style>
+body{
+  font-family:Arial,sans-serif;
+  background:#f3f4f6;
+  margin:0;
+  padding:24px;
+}
+.container{
+  display:grid;
+  grid-template-columns:420px 1fr;
+  gap:24px;
+}
+.card,.page{
+  background:#fff;
+  padding:20px;
+  border-radius:12px;
+  box-shadow:0 6px 18px rgba(0,0,0,.08);
+}
+button{
+  padding:8px 12px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  margin:4px 2px;
+}
+.btn{background:#1E3A8A;color:#fff}
+.btn-add{background:#059669;color:#fff;font-size:13px}
+
+#flowArea{
+  margin-top:16px;
+  height:480px;
+  border:2px dashed #94a3b8;
+  border-radius:12px;
+  position:relative;
+  background:transparent; /* PENTING UNTUK PNG TRANSPARAN */
+  overflow:hidden;
+}
+
+/* SVG */
+#svg{
+  position:absolute;
+  inset:0;
+}
+
+/* Nodes */
+.flow-node{
+  position:absolute;
+  width:120px;
+  height:60px;
+  cursor:move;
+  z-index:10;
+  user-select:none;
+}
+.flow-node .content{
+  width:100%;
+  height:100%;
+  border:2px solid #1e3a8a;
+  border-radius:8px;
+  background:#fff;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+  font-size:13px;
+}
+.flow-node.start .content,
+.flow-node.end .content{
+  border-radius:999px;
+}
+.flow-node.start .content{background:#dcfce7}
+.flow-node.end .content{background:#fee2e2}
+
+/* Decision */
+.flow-node.decision{
+  width:80px;
+  height:80px;
+}
+.flow-node.decision .content{
+  transform:rotate(45deg);
+  border-radius:0;
+  background:#fef9c3;
+  border-color:#ca8a04;
+}
+.flow-node.decision span{
+  transform:rotate(-45deg);
+  display:block;
+}
+
+/* delete node */
+.node-del{
+  position:absolute;
+  top:-10px;
+  right:-10px;
+  width:20px;
+  height:20px;
+  border-radius:50%;
+  background:#dc2626;
+  color:#fff;
+  text-align:center;
+  line-height:20px;
+  font-size:13px;
+  cursor:pointer;
+}
+
+/* handle siku */
+.handle{
+  fill:#2563eb;
+  cursor:move;
+}
+
+/* saat export */
+.exporting{
+  border:none !important;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<div class="card">
+  <h3>FLOW SETTING</h3>
+  <button class="btn" onclick="connectorMode='straight'">Konektor Lurus</button>
+  <button class="btn" onclick="connectorMode='elbow'">Konektor Siku</button>
+  <hr>
+  <button class="btn-add" onclick="addNode('start')">+ Start</button>
+  <button class="btn-add" onclick="addNode('process')">+ Proses</button>
+  <button class="btn-add" onclick="addNode('decision')">+ Decision</button>
+  <button class="btn-add" onclick="addNode('end')">+ End</button>
+  <hr>
+  <button class="btn" onclick="saveFlow()">💾 Save PNG</button>
+  <button class="btn" onclick="resetFlow()">🔄 Reset</button>
+</div>
+
+<div class="page">
+<h3>FLOWCHART SOP</h3>
+<div id="flowArea">
+  <svg id="svg" width="100%" height="100%"></svg>
+</div>
+</div>
+</div>
+
+<!-- HTML2CANVAS PRO -->
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+<script>
+const area=document.getElementById("flowArea");
+const svg=document.getElementById("svg");
+
+let nodes={}, links=[];
+let dragNode=null, dragHandle=null, linkFrom=null;
+let connectorMode="elbow";
+let offsetX=0, offsetY=0;
+
+/* resize SVG */
+function resizeSVG(){
+  svg.setAttribute("viewBox",`0 0 ${area.clientWidth} ${area.clientHeight}`);
+}
+resizeSVG();
+window.addEventListener("resize",resizeSVG);
+
+/* ADD NODE */
+function addNode(type){
+  const id="N"+Date.now();
+  nodes[id]={id,type,x:80,y:80,text:type.toUpperCase()};
+  draw();
+}
+
+/* ANCHOR */
+function getAnchor(from,to){
+  const fw=from.type==="decision"?80:120;
+  const fh=from.type==="decision"?80:60;
+  const fx=from.x+fw/2;
+  const fy=from.y+fh/2;
+  const tx=to.x+(to.type==="decision"?40:60);
+  const ty=to.y+(to.type==="decision"?40:30);
+  return Math.abs(tx-fx)>Math.abs(ty-fy)
+    ?{x:fx+(tx>fx?fw/2:-fw/2),y:fy}
+    :{x:fx,y:fy+(ty>fy?fh/2:-fh/2)};
+}
+
+/* DRAW */
+function draw(){
+  area.querySelectorAll(".flow-node").forEach(n=>n.remove());
+  svg.innerHTML=`
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5"
+      markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 L10 5 L0 10Z" fill="#000"/>
+    </marker>
+  </defs>`;
+  drawLinks();
+  drawNodes();
+}
+
+/* NODES */
+function drawNodes(){
+  Object.values(nodes).forEach(n=>{
+    const d=document.createElement("div");
+    d.className="flow-node "+n.type;
+    d.style.left=n.x+"px";
+    d.style.top=n.y+"px";
+    d.innerHTML=`
+      <div class="content">${n.type==="decision"?"<span>Decision</span>":n.text}</div>
+      <div class="node-del">×</div>
+    `;
+
+    d.onmousedown=e=>{
+      dragNode=n.id;
+      offsetX=e.offsetX;
+      offsetY=e.offsetY;
+    };
+
+    d.onclick=e=>{
+      e.stopPropagation();
+      if(!linkFrom) linkFrom=n.id;
+      else{
+        links.push({
+          id:"L"+Date.now(),
+          from:linkFrom,
+          to:n.id,
+          type:connectorMode,
+          midX:(nodes[linkFrom].x+n.x)/2+60,
+          midY:(nodes[linkFrom].y+n.y)/2+30
+        });
+        linkFrom=null;
+        draw();
+      }
+    };
+
+    d.querySelector(".node-del").onclick=e=>{
+      e.stopPropagation();
+      links=links.filter(l=>l.from!==n.id&&l.to!==n.id);
+      delete nodes[n.id];
+      draw();
+    };
+
+    area.appendChild(d);
+  });
+}
+
+/* LINKS */
+function drawLinks(){
+  links.forEach(l=>{
+    const a=nodes[l.from], b=nodes[l.to];
+    if(!a||!b) return;
+    const A=getAnchor(a,b), B=getAnchor(b,a);
+    const d=l.type==="straight"
+      ?`M${A.x} ${A.y} L${B.x} ${B.y}`
+      :`M${A.x} ${A.y} L${l.midX} ${l.midY} L${B.x} ${B.y}`;
+
+    svg.innerHTML+=`
+      <path d="${d}" stroke="#000" stroke-width="2" fill="none"
+        marker-end="url(#arrow)"/>
+      ${l.type==="elbow"
+        ?`<circle class="handle" cx="${l.midX}" cy="${l.midY}" r="6"
+            onmousedown="dragHandle='${l.id}'"/>`
+        :""}
+    `;
+  });
+}
+
+/* DRAG */
+area.addEventListener("mousemove",e=>{
+  const r=area.getBoundingClientRect();
+  if(dragNode){
+    nodes[dragNode].x=e.clientX-r.left-offsetX;
+    nodes[dragNode].y=e.clientY-r.top-offsetY;
+    draw();
+  }
+  if(dragHandle){
+    const l=links.find(x=>x.id===dragHandle);
+    if(l){
+      l.midX=e.clientX-r.left;
+      l.midY=e.clientY-r.top;
+      draw();
+    }
+  }
+});
+document.addEventListener("mouseup",()=>{
+  dragNode=null;
+  dragHandle=null;
+});
+
+/* RESET */
+function resetFlow(){
+  if(!confirm("Reset semua flowchart?")) return;
+  nodes={}; links=[];
+  draw();
+}
+
+/* SAVE PNG – PRO MODE */
+function saveFlow(){
+  area.classList.add("exporting");
+
+  html2canvas(area,{
+    backgroundColor:null,  // TRANSPARAN
+    scale:2,
+    useCORS:true
+  }).then(canvas=>{
+    const link=document.createElement("a");
+    link.download="flowchart-sop-transparent.png";
+    link.href=canvas.toDataURL("image/png");
+    link.click();
+    area.classList.remove("exporting");
+  });
+}
+</script>
+</body>
+</html>
