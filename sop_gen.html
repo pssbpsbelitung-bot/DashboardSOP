@@ -94,6 +94,7 @@ th{
   .card,.no-print{display:none !important}
 }
 
+
 /* ===== FLOW ===== */
 .flow-text{
   font-size:11px;
@@ -296,6 +297,7 @@ button{
   position:absolute;
   inset:0;
   z-index:500;
+  pointer-events:auto;
 }
 
 .drag-image{
@@ -316,11 +318,25 @@ button{
   cursor:se-resize;
   border-radius:2px;
 }
+.resize-handle.nw{ top:-5px; left:-5px; cursor:nw-resize; }
+.resize-handle.ne{ top:-5px; right:-5px; cursor:ne-resize; }
+.resize-handle.sw{ bottom:-5px; left:-5px; cursor:sw-resize; }
+.resize-handle.se{ bottom:-5px; right:-5px; cursor:se-resize; }
+
+.resize-handle.n{ top:-5px; left:50%; transform:translateX(-50%); cursor:n-resize; }
+.resize-handle.s{ bottom:-5px; left:50%; transform:translateX(-50%); cursor:s-resize; }
+.resize-handle.w{ left:-5px; top:50%; transform:translateY(-50%); cursor:w-resize; }
+.resize-handle.e{ right:-5px; top:50%; transform:translateY(-50%); cursor:e-resize; }
 
 .image-wrapper{
   position:absolute;
   cursor:move;
   z-index:1000;
+ pointer-events:auto;
+}
+.flow-node,
+#svg {
+  pointer-events: none;
 }
 
 
@@ -582,6 +598,13 @@ function initializeCustomDropdowns() {
   });
 }
 
+function hapusKegiatan(index){
+  if(!confirm("Hapus aksi tata laksana ini?")) return;
+  kegiatanData.splice(index,1);
+  renderTable();
+}
+
+
 // Fungsi untuk inisialisasi dropdown kustom
 function initializeCustomDropdowns() {
   const dropdowns = document.querySelectorAll('.custom-dropdown');
@@ -645,7 +668,11 @@ function renderTable(){
       <td>${d.output}</td>
       <td></td>
       <td class="no-print center">
-        <button onclick="kegiatanData.splice(${i},1);renderTable()">✕</button>
+        <button onclick="hapusKegiatan(${i})"
+        style="background:#dc2626;color:#fff;border-radius:6px;width:32px;height:32px">
+  ✕
+</button>
+
       </td>
     </tr>`;
   });
@@ -677,10 +704,7 @@ window.addEventListener('load', initializeCustomDropdowns);
 <!-- ======================= SCRIPT HTML KEDUA (UTUH) ======================= -->
 <div class="container">
 
-<div class="card">
- </div>
 
-<div class="page">
 </div>
 
 <script>
@@ -908,7 +932,13 @@ function insertImageFree(input){
     img.style.width = "100%";
     img.style.display = "block";
 
-    const handle = document.createElement("div");
+    ["nw","n","ne","e","se","s","sw","w"].forEach(dir=>{
+  const h=document.createElement("div");
+  h.className="resize-handle "+dir;
+  box.appendChild(h);
+  makeResizable(box,h,dir);
+});
+
     handle.className = "resize-handle";
 
     box.appendChild(img);
@@ -953,24 +983,40 @@ function makeImageDraggable(el){
   });
 }
 
-function makeResizable(box, handle){
-  let startX, startW, resizing=false;
+function makeResizable(box, handle, dir){
+  let startX,startY,startW,startH,startL,startT,resizing=false;
 
   handle.addEventListener("mousedown", e=>{
+    e.stopPropagation();
     resizing=true;
     startX=e.clientX;
+    startY=e.clientY;
     startW=box.offsetWidth;
-    e.stopPropagation();
+    startH=box.offsetHeight;
+    startL=box.offsetLeft;
+    startT=box.offsetTop;
   });
 
   document.addEventListener("mousemove", e=>{
     if(!resizing) return;
-    box.style.width = Math.max(60, startW + (e.clientX-startX))+"px";
+
+    let dx=e.clientX-startX;
+    let dy=e.clientY-startY;
+
+    if(dir.includes("e")) box.style.width = Math.max(60,startW+dx)+"px";
+    if(dir.includes("s")) box.style.height= Math.max(40,startH+dy)+"px";
+
+    if(dir.includes("w")){
+      box.style.width=Math.max(60,startW-dx)+"px";
+      box.style.left =(startL+dx)+"px";
+    }
+    if(dir.includes("n")){
+      box.style.height=Math.max(40,startH-dy)+"px";
+      box.style.top =(startT+dy)+"px";
+    }
   });
 
-  document.addEventListener("mouseup", ()=>{
-    resizing=false;
-  });
+  document.addEventListener("mouseup",()=>resizing=false);
 }
 
 
@@ -978,4 +1024,3 @@ function makeResizable(box, handle){
 </script>
 </body>
 </html>
-
