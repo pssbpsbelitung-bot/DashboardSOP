@@ -296,6 +296,7 @@ button{
   position:absolute;
   inset:0;
   z-index:500;
+  pointer-events:auto;
 }
 
 .drag-image{
@@ -306,21 +307,49 @@ button{
   z-index:999;
 }
 
+/* ===== RESIZE HANDLES 8 ARAH ===== */
 .resize-handle{
   position:absolute;
-  width:12px;
-  height:12px;
-  right:-6px;
-  bottom:-6px;
+  width:10px;
+  height:10px;
   background:#2563eb;
-  cursor:se-resize;
   border-radius:2px;
+  z-index:9999;
 }
+
+.handle-nw{top:-5px;left:-5px;cursor:nwse-resize}
+.handle-ne{top:-5px;right:-5px;cursor:nesw-resize}
+.handle-sw{bottom:-5px;left:-5px;cursor:nesw-resize}
+.handle-se{bottom:-5px;right:-5px;cursor:nwse-resize}
+
+.handle-n{top:-5px;left:50%;transform:translateX(-50%);cursor:ns-resize}
+.handle-s{bottom:-5px;left:50%;transform:translateX(-50%);cursor:ns-resize}
+.handle-w{left:-5px;top:50%;transform:translateY(-50%);cursor:ew-resize}
+.handle-e{right:-5px;top:50%;transform:translateY(-50%);cursor:ew-resize}
 
 .image-wrapper{
   position:absolute;
+  min-height:40px; 
   cursor:move;
   z-index:1000;
+}
+.preview{
+  overflow:visible;
+}
+.tabel-tiga{
+  table-layout: fixed; /* KUNCI LAYOUT */
+}
+.tabel-tiga td,
+.tabel-tiga th{
+  word-wrap: break-word;
+  white-space: normal;
+}
+.pel-col{
+  width: calc(100% / var(--pel-count));
+  text-align: center;
+}
+.pelaksana-col{
+  text-align: center;
 }
 
 
@@ -381,6 +410,9 @@ button{
 <input type="file" accept="image/*" id="imgInput" style="display:none"
        onchange="insertImageFree(this)">
 <button class="btn-add" onclick="imgInput.click()">+ Insert Gambar</button>
+<button onclick="removeLastImage()">
+  Hapus gambar terakhir
+</button>
 
 <hr>
 <button class="btn" onclick="render()">Update Preview</button>
@@ -393,6 +425,11 @@ button{
 <div id="imageLayer"></div>
 <!-- ===== TABEL 1 ===== -->
 <table>
+<colgroup>
+  <col style="width:50%">
+  <col style="width:10%">
+  <col style="width:40%">
+</colgroup>
 <tr>
   <td rowspan="8" class="center">
     <img src="https://lh3.googleusercontent.com/d/1FmC7IA0IFPIagwnYJlj7m9VkNZEdFkMJ=s300"
@@ -463,7 +500,11 @@ button{
 <h3 style="margin-top:20px"></h3>
 
 <!-- ===== TABEL 3 ===== -->
-<table>
+<table id="tabelTiga" class="tabel-tiga">
+  <colgroup>
+    <col style="width:3%">      <!-- No -->
+    <col style="width:25%">     <!-- Kegiatan -->
+   </colgroup>
 <thead>
 <tr>
   <th rowspan="2">No</th>
@@ -483,6 +524,7 @@ button{
 
 <script>
 let pelaksana=[], kegiatanData=[];
+let lastInsertedImage = null;
 
 /* === PELAKSANA === */
 function tambahPelaksana(){
@@ -623,9 +665,15 @@ function initializeCustomDropdowns() {
 
 // Panggil fungsi inisialisasi setelah tabel dirender
 function renderTable(){
-  pelHeader.colSpan=pelaksana.length||1;
-  pelSub.innerHTML=pelaksana.map(p=>`<th>${p}</th>`).join("")
-    +`<th>Kelengkapan</th><th>Waktu</th><th>Output</th>`;
+
+const pelCount = pelaksana.length || 1;  
+pelHeader.colSpan=pelaksana.length||1;
+
+pelSub.innerHTML = pelaksana.map((p,i)=>`
+  <th class="pel-col">${i+1}</th>
+`).join("")
++ `<th>Kelengkapan</th><th>Waktu</th><th>Output</th>`;
+
   tbody.innerHTML="";
   kegiatanData.forEach((d,i)=>{
     tbody.innerHTML+=`
@@ -836,94 +884,47 @@ function insertImageFree(input){
 
   const reader = new FileReader();
   reader.onload = e => {
+
     const wrapper = document.createElement("div");
-wrapper.className = "image-wrapper";
-wrapper.style.left = "120px";
-wrapper.style.top  = "120px";
-wrapper.style.width = "200px";
-wrapper.style.cursor = "move";
-wrapper.style.zIndex = 1000;
+    wrapper.className = "image-wrapper";
+    wrapper.style.left = "120px";
+    wrapper.style.top  = "120px";
+    wrapper.style.width = "200px";
+    wrapper.style.height = "150px";
+    wrapper.style.cursor = "move";
+    wrapper.style.zIndex = 1000;
 
     const img = document.createElement("img");
     img.src = e.target.result;
-    img.style.width = "100%";
-    img.style.display = "block";
+img.onload = ()=>{
+  const ratio = img.naturalHeight / img.naturalWidth;
+  const w = 200;                 // lebar awal
+  const h = Math.round(w * ratio);
 
-    const handle = document.createElement("div");
-    handle.className = "resize-handle";
+  wrapper.style.width  = w + "px";
+  wrapper.style.height = h + "px";
+};
+    img.style.width = "100%";
+    img.style.height = "100%";
+    img.style.objectFit = "fill";
+    img.style.display = "block";
 
     wrapper.appendChild(img);
-    wrapper.appendChild(handle);
+
+    // ===== 8 ARAH RESIZE =====
+    const directions = ["nw","n","ne","e","se","s","sw","w"];
+    directions.forEach(dir=>{
+      const handle = document.createElement("div");
+      handle.className = "resize-handle handle-" + dir;
+      wrapper.appendChild(handle);
+      makeResizable(wrapper, handle, dir);
+    });
+
     makeImageDraggable(wrapper);
-    makeResizable(wrapper, handle);
-
     imageLayer.appendChild(wrapper);
+lastInsertedImage = wrapper;
   };
-  reader.readAsDataURL(file);
-  input.value="";
-}
 
-function makeImageDraggable(el){
-  let shiftX=0, shiftY=0, dragging=false;
-  const container = preview;
-
-  el.addEventListener("mousedown", e=>{
-    const rect = el.getBoundingClientRect();
-    shiftX = e.clientX - rect.left;
-    shiftY = e.clientY - rect.top;
-    dragging = true;
-    el.style.zIndex = Date.now();
-    e.preventDefault();
-    e.stopPropagation();
-  });
-
-  document.addEventListener("mousemove", e=>{
-    if(!dragging) return;
-    const cRect = container.getBoundingClientRect();
-    el.style.left = (e.clientX - cRect.left - shiftX) + "px";
-    el.style.top  = (e.clientY - cRect.top  - shiftY) + "px";
-  });
-
-  document.addEventListener("mouseup", ()=>{
-    dragging = false;
-  });
-}
-
-
-/* ===== INSERT GAMBAR FREE DRAG (FIX FINAL) ===== */
-function insertImageFree(input){
-  const file = input.files[0];
-  if(!file) return;
-
-  const reader = new FileReader();
-  reader.onload = e => {
-    const box = document.createElement("div");
-    box.className = "image-wrapper";
-    box.style.left = "120px";
-    box.style.top  = "120px";
-    box.style.width = "200px";
-
-    const img = document.createElement("img");
-    img.src = e.target.result;
-    img.style.width = "100%";
-    img.style.display = "block";
-
-    const handle = document.createElement("div");
-    handle.className = "resize-handle";
-
-    box.appendChild(img);
-    box.appendChild(handle);
-box.addEventListener("contextmenu", e=>{
-  e.preventDefault();
-  if(confirm("Hapus gambar ini?")){
-    box.remove();
-  }
-});
-    makeImageDraggable(box);
-    makeResizable(box, handle);
-
-    imageLayer.appendChild(box);
-  };
   reader.readAsDataURL(file);
   input.value="";
 }
@@ -933,6 +934,7 @@ function makeImageDraggable(el){
   const container = preview;
 
   el.addEventListener("mousedown", e=>{
+    if(e.target.classList.contains("resize-handle")) return;
     dragging=true;
     const rect = el.getBoundingClientRect();
     shiftX = e.clientX - rect.left;
@@ -953,26 +955,66 @@ function makeImageDraggable(el){
   });
 }
 
-function makeResizable(box, handle){
-  let startX, startW, resizing=false;
+
+function makeResizable(box, handle, dir){
+  let startX, startY, startW, startH, startL, startT;
 
   handle.addEventListener("mousedown", e=>{
-    resizing=true;
-    startX=e.clientX;
-    startW=box.offsetWidth;
     e.stopPropagation();
-  });
 
-  document.addEventListener("mousemove", e=>{
-    if(!resizing) return;
-    box.style.width = Math.max(60, startW + (e.clientX-startX))+"px";
-  });
+    startX = e.clientX;
+    startY = e.clientY;
+    startW = box.offsetWidth;
+    startH = box.offsetHeight;
+// 🔒 KUNCI UKURAN SAAT MULAI RESIZE (INI KUNCINYA)
+box.style.width  = startW + "px";
+box.style.height = startH + "px";
+    startL = box.offsetLeft;
+    startT = box.offsetTop;
 
-  document.addEventListener("mouseup", ()=>{
-    resizing=false;
+    document.onmousemove = ev=>{
+      const dx = ev.clientX - startX;
+      const dy = ev.clientY - startY;
+
+      // kanan
+      if(dir.includes("e")){
+        box.style.width = Math.max(60, startW + dx) + "px";
+      }
+
+      // bawah
+      if(dir.includes("s")){
+        box.style.height = Math.max(60, startH + dy) + "px";
+      }
+
+      // kiri
+      if(dir.includes("w")){
+        box.style.width = Math.max(60, startW - dx) + "px";
+        box.style.left  = startL + dx + "px";
+      }
+
+      // atas
+      if(dir.includes("n")){
+        box.style.height = Math.max(60, startH - dy) + "px";
+        box.style.top    = startT + dy + "px";
+      }
+    };
+
+    document.onmouseup = ()=>{
+      document.onmousemove = null;
+      document.onmouseup = null;
+    };
   });
 }
+function removeLastImage(){
+  if(lastInsertedImage){
+    lastInsertedImage.remove();
+    lastInsertedImage = null;
+  }
+}
+
+
+
+
 </script>
 </body>
 </html>
-
