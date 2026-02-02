@@ -61,7 +61,6 @@ th{
   text-align:center;
 }
 .center{text-align:center}
-.no-print{display:table-cell}
 
 /* ===== KUNCI TABEL 1 & 2 ===== */
 .tabel-dua-kolom{
@@ -351,6 +350,23 @@ button{
 .pelaksana-col{
   text-align: center;
 }
+.header img{
+  margin-top:12px;   /* atur ini */
+  margin-bottom:8px;
+}
+.kop-text .line{
+  font-size:16px;
+  margin:4px 0;
+  letter-spacing:.4px;
+}
+
+.kop-text .space-2enter{
+  margin-top:18px;   /* ⬅️ kira-kira setara 2x ENTER */
+}
+
+.kop-text .space-top{
+  margin-top:10px;
+}
 
 
 </style>
@@ -366,6 +382,7 @@ button{
 <div class="card">
 <h3>DATA SOP</h3>
 
+<input id="timSOP" placeholder="Tim / Unit Kerja">
 <input id="nomor" placeholder="Nomor SOP">
 <input id="buat" placeholder="Tanggal Pembuatan">
 <input id="revisi" placeholder="Tanggal Revisi">
@@ -434,7 +451,15 @@ button{
   <td rowspan="8" class="center">
     <img src="https://lh3.googleusercontent.com/d/1FmC7IA0IFPIagwnYJlj7m9VkNZEdFkMJ=s300"
     style="width:100px"><br>
-    <b>BADAN PUSAT STATISTIK<br>KABUPATEN BELITUNG</b>
+    <div class="kop-text">
+    <div class="line bold">BADAN PUSAT STATISTIK</div>
+    <div class="line">PROVINSI KEPULAUAN BANGKA BELITUNG</div>
+
+   <div class="line bold space-2enter">BPS KABUPATEN BELITUNG</div>
+
+ <div class="line bold space-2enter" id="pTim"></div>
+
+  </div>
   </td>
   <td>NOMOR SOP</td><td>: <span id="pNomor"></span></td>
 </tr>
@@ -512,7 +537,7 @@ button{
   <th id="pelHeader">Pelaksana</th>
   <th colspan="3">Mutu Baku</th>
   <th rowspan="2">Ket</th>
-  <th rowspan="2" class="no-print">Aksi</th>
+ 
 </tr>
 <tr id="pelSub"></tr>
 </thead>
@@ -579,6 +604,7 @@ function tambahKegiatan(){
 }
 
 function render(){
+  pTim.textContent = timSOP.value;  
   pNomor.textContent=nomor.value;
   pBuat.textContent=buat.value;
   pRevisi.textContent=revisi.value;
@@ -692,9 +718,7 @@ pelSub.innerHTML = pelaksana.map(p=>`
       <td class="center">${d.waktu}</td>
       <td>${d.output}</td>
       <td></td>
-      <td class="no-print center">
-        <button onclick="kegiatanData.splice(${i},1);renderTable()">✕</button>
-      </td>
+     
     </tr>`;
   });
 
@@ -1018,4 +1042,3 @@ function removeLastImage(){
 </script>
 </body>
 </html>
-
