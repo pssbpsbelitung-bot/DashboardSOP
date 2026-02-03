@@ -37,13 +37,16 @@ button{
 }
 .btn{background:#1E3A8A;color:#fff}
 .btn-add{background:#059669;color:#fff;font-size:13px}
-
 .page{
   background:#fff;
-  padding:28px;
-  border-radius:12px;
-  position:relative;
+  width: 297mm;      /* A4 LANDSCAPE */
+  min-height: 210mm; /* A4 LANDSCAPE */
+  margin: 0 auto;    /* tengah */
+  padding: 18mm;
+  box-sizing: border-box;
+  position: relative;
 }
+
 
 /* ===== TABLE ===== */
 table{
@@ -81,16 +84,84 @@ th{
   font-weight:bold;
   text-decoration:underline;
 }
-
-/* ===== PRINT ===== */
+/* ================= PRINT SETUP (FIX) ================= */
 @page{
-  size: landscape;
-  margin:20mm;
+  size: A4 landscape;
+  margin: 15mm;
 }
+
 @media print{
-  body{background:#fff;padding:0}
-  .container{grid-template-columns:1fr}
-  .card,.no-print{display:none !important}
+
+  body{
+    background:#fff;
+    margin:0;
+    padding:0;
+  }
+
+  /* sembunyikan sidebar */
+  .no-print,
+  .card{
+    display:none !important;
+  }
+
+  .container{
+    grid-template-columns:1fr;
+  }
+
+  /* halaman A4 */
+  .page{
+    width:297mm;
+    min-height:210mm;
+    margin:0 auto;
+    padding:18mm;
+    box-sizing:border-box;
+    position:relative;
+    transform:none !important;
+    zoom:1 !important;
+  }
+
+  /* page break */
+  .print-page-1{
+    page-break-after: always;
+    break-after: page;
+  }
+
+  .print-page-2{
+    page-break-before: always;
+    break-before: page;
+  }
+
+  /* gambar */
+  #imageLayer{
+    position:absolute !important;
+    top:0;
+    left:0;
+    right:0;
+    bottom:0;
+    overflow:visible;
+  }
+
+  .image-wrapper,
+  .drag-image{
+    position:absolute !important;
+  }
+ .print-lock{
+    pointer-events:none !important;
+    user-select:none !important;
+    transform:none !important;
+  }
+
+  /* tabel jangan pecah */
+  table{
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* warna */
+  *{
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 }
 
 /* ===== FLOW ===== */
@@ -293,7 +364,10 @@ button{
 
 #imageLayer{
   position:absolute;
-  inset:0;
+  top:0;
+  left:0;
+  right:0;
+  bottom:0;
   z-index:500;
   pointer-events:auto;
 }
@@ -327,10 +401,16 @@ button{
 .handle-e{right:-5px;top:50%;transform:translateY(-50%);cursor:ew-resize}
 
 .image-wrapper{
-  position:absolute;
-  min-height:40px; 
+  position:absolute !important;
+  min-height:40px;
   cursor:move;
   z-index:1000;
+ .image-wrapper,
+  .drag-image{
+    position:absolute !important;
+    left: auto;
+    top: auto;
+  }
 }
 .preview{
   overflow:visible;
@@ -368,7 +448,6 @@ button{
   margin-top:10px;
 }
 
-
 </style>
 </head>
 
@@ -379,7 +458,7 @@ button{
 <div class="container">
 
 <!-- ================= FORM ================= -->
-<div class="card">
+<div class="card no-print">
 <h3>DATA SOP</h3>
 
 <input id="timSOP" placeholder="Tim / Unit Kerja">
@@ -412,6 +491,7 @@ button{
   <th>Kelengkapan</th>
   <th>Waktu</th>
   <th>Output</th>
+  <th>Ket</th>
 </tr>
 <tr>
   <td><textarea id="kegiatan"></textarea></td>
@@ -419,6 +499,7 @@ button{
   <td><input id="kelengkapan"></td>
   <td><input id="waktu"></td>
   <td><input id="output"></td>
+  <td><textarea id="ket" placeholder="Keterangan tambahan"></textarea></td>
 </tr>
 </table>
 
@@ -440,6 +521,8 @@ button{
 <!-- ================= PREVIEW ================= -->
 <div class="page" id="preview">
 <div id="imageLayer"></div>
+
+<div class="print-page-1">
 <!-- ===== TABEL 1 ===== -->
 <table>
 <colgroup>
@@ -521,9 +604,11 @@ button{
   <td id="pPencatatan"></td>
 </tr>
 </table>
+</div>
 
-<h3 style="margin-top:20px"></h3>
+<div style="height:6px"></div>
 
+<div class="print-page-2">
 <!-- ===== TABEL 3 ===== -->
 <table id="tabelTiga" class="tabel-tiga">
   <colgroup>
@@ -546,6 +631,7 @@ button{
 
 </div>
 </div>
+
 
 <script>
 let pelaksana=[], kegiatanData=[];
@@ -593,13 +679,20 @@ function tambahKegiatan(){
   let pel={};
   pelaksana.forEach((_,i)=>pel[i]={flow:""});
   kegiatanData.push({
-    kegiatan:kegiatan.value,
-    pelaksana:pel,
-    kelengkapan:kelengkapan.value,
-    waktu:waktu.value,
-    output:output.value
-  });
-  kegiatan.value=kelengkapan.value=waktu.value=output.value="";
+  kegiatan: kegiatan.value,
+  pelaksana: pel,
+  kelengkapan: kelengkapan.value,
+  waktu: waktu.value,
+  output: output.value,
+  ket: ket.value
+});
+
+ kegiatan.value =
+ kelengkapan.value =
+ waktu.value =
+ output.value =
+ ket.value = "";
+
   renderTable();
 }
 
@@ -717,7 +810,7 @@ pelSub.innerHTML = pelaksana.map(p=>`
       <td>${d.kelengkapan}</td>
       <td class="center">${d.waktu}</td>
       <td>${d.output}</td>
-      <td></td>
+      <td>${d.ket || ""}</td>
      
     </tr>`;
   });
@@ -745,15 +838,6 @@ function exportWord(){
 // Panggil fungsi inisialisasi saat halaman dimuat
 window.addEventListener('load', initializeCustomDropdowns);
 </script>
-
-<!-- ======================= SCRIPT HTML KEDUA (UTUH) ======================= -->
-<div class="container">
-
-<div class="card">
- </div>
-
-<div class="page">
-</div>
 
 <script>
 const area = document.getElementById("flowArea");
@@ -974,9 +1058,15 @@ function makeImageDraggable(el){
     el.style.top  = (e.clientY - cRect.top  - shiftY) + "px";
   });
 
-  document.addEventListener("mouseup", ()=>{
-    dragging=false;
-  });
+document.addEventListener("mouseup", ()=>{
+  if(dragging){
+    el.style.left = el.offsetLeft + "px";
+    el.style.top  = el.offsetTop  + "px";
+    el.style.width  = el.offsetWidth  + "px";
+    el.style.height = el.offsetHeight + "px";
+  }
+  dragging=false;
+});
 }
 
 
@@ -1035,7 +1125,22 @@ function removeLastImage(){
     lastInsertedImage = null;
   }
 }
+window.addEventListener("beforeprint", () => {
 
+  document.querySelectorAll(".image-wrapper").forEach(img => {
+
+    // KUNCI posisi & ukuran terakhir
+    img.style.left   = img.offsetLeft   + "px";
+    img.style.top    = img.offsetTop    + "px";
+    img.style.width  = img.offsetWidth  + "px";
+    img.style.height = img.offsetHeight + "px";
+
+    // MATIKAN interaksi
+    img.classList.add("print-lock");
+
+  });
+
+});
 
 
 
