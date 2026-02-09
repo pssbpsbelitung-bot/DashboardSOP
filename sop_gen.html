@@ -467,6 +467,11 @@ button{
 <input id="revisi" placeholder="Tanggal Revisi">
 <input id="efektif" placeholder="Tanggal Efektif">
 <input id="namaSOP" placeholder="Nama SOP">
+<!-- === DASAR HUKUM INPUT === -->
+<h4>Dasar Hukum</h4>
+<input id="dasarHukumInput" placeholder="Tambah dasar hukum">
+<button class="btn-add" onclick="tambahDasarHukum()">+ Tambah</button>
+<div id="listDasarHukumForm" style="margin-top:8px"></div>
 
 <textarea id="kualifikasi" placeholder="Kualifikasi Pelaksana"></textarea>
 <textarea id="keterkaitan" placeholder="Keterkaitan"></textarea>
@@ -571,19 +576,17 @@ button{
 </tr>
 <tr>
   <td>
-    <ol style="margin:0;padding-left:18px">
+    <ol id="pDasarHukum" style="margin:0;padding-left:18px">
       <li>UU No. 16 Tahun 1997 tentang Statistik</li>
       <li>PP No. 51 Tahun 1999 tentang Penyelenggaraan Statistik</li>   
       <li>Perpres No. 86 Tahun 2007 tentang Badan Pusat Statistik</li>
       <li>Kepka BPS No. 003 Tahun 2002 jo. Perka BPS No. 16 Tahun 2017 Tentang Uraian Tugas Bagian, Bidang, Subbagian, dan Seksi Perwakilan BPS di Daerah</li>
       <li>Peraturan Kepala BPS No.19 Tahun 2013 Tentang Pedoman Penyusunan Standar Operasional Prosedur Administrasi Pemerintah di lingkungan BPS</li>
       <li>PermenPAN RB No.28 Tahun 2019 Tentang Penyetaraan Jabatan Administrasi ke Dalam Jabatan Fungsional</li>
-      <li> Peraturan Kepala BPS No.8 Tahun 2020 Tentang Organisasi dan Tata Kerja Badan Pusat Statistik Provinsi dan Badan Pusat Statistik Kabupaten/ Kota</li>
-      
-      <li>Perka BPS No. 19 Tahun 2013 tentang SOP Administrasi</li>
+      <li>Peraturan Kepala BPS No.8 Tahun 2020 Tentang Organisasi dan Tata Kerja Badan Pusat Statistik Provinsi dan Badan Pusat Statistik Kabupaten/ Kota</li>
       <li>Perka BPS No. 5 Tahun 2023 tentang Organisasi dan Tata Kerja BPS</li>
     </ol>
-  </td>
+   </td>
   <td id="pKualifikasi"></td>
 </tr>
 <tr>
@@ -635,6 +638,44 @@ button{
 <script>
 let pelaksana=[], kegiatanData=[];
 let lastInsertedImage = null;
+
+/* === DASAR HUKUM FORM === */
+function tambahDasarHukum(){
+  const input = document.getElementById("dasarHukumInput");
+  if(!input.value.trim()) return;
+
+  const ol = document.getElementById("pDasarHukum");
+  if(!ol) return;
+
+  const li = document.createElement("li");
+  li.textContent = input.value.trim();
+  ol.appendChild(li);
+
+  input.value = "";
+}
+
+function hapusDasarHukum(i){
+  if(!confirm("Hapus dasar hukum ini?")) return;
+  dasarHukum.splice(i,1);
+  renderDasarHukumForm();
+}
+
+function renderDasarHukumForm(){
+  const box = document.getElementById("listDasarHukumForm");
+  box.innerHTML = "";
+
+  dasarHukum.forEach((d,i)=>{
+    box.innerHTML += `
+      <div style="display:flex;gap:6px;margin-bottom:4px">
+        <input value="${d}"
+          onchange="dasarHukum[${i}]=this.value"
+          style="flex:1">
+        <button onclick="hapusDasarHukum(${i})"
+          style="background:#dc2626;color:#fff">✕</button>
+      </div>
+    `;
+  });
+}
 
 /* === PELAKSANA === */
 function tambahPelaksana(){
@@ -708,7 +749,18 @@ function render(){
   pPeralatan.innerHTML=peralatan.value.replace(/\n/g,"<br>");
   pPeringatan.innerHTML=peringatan.value.replace(/\n/g,"<br>");
   pPencatatan.innerHTML=pencatatan.value.replace(/\n/g,"<br>");
+renderDasarHukumPreview();
+
 }
+function renderDasarHukumPreview(){
+  const ol = document.getElementById("pDasarHukum");
+  if(!ol) return;
+
+  ol.innerHTML = dasarHukum
+    .map(d => `<li>${d}</li>`)
+    .join("");
+}
+
 
 // Fungsi untuk inisialisasi dropdown kustom
 function initializeCustomDropdowns() {
@@ -835,7 +887,11 @@ function exportWord(){
 }
 
 // Panggil fungsi inisialisasi saat halaman dimuat
-window.addEventListener('load', initializeCustomDropdowns);
+window.addEventListener('load', ()=>{
+  initializeCustomDropdowns();
+  renderDasarHukumForm();
+});
+
 </script>
 
 <script>
@@ -1146,6 +1202,8 @@ window.addEventListener("beforeprint", () => {
 </script>
 </body>
 </html>
+
+
 
 
 
